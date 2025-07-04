@@ -1,14 +1,18 @@
 from flask import Flask, request, jsonify
 import numpy as np
 from flask_cors import CORS
-import joblib
 import datetime
 from CustomModel import WeightedEnsembleRegressor
 import joblib
 
 
 # Load the model
-model = joblib.load("C:/Users/ajaym/PyCharmMiscProject/final_uber_ensemble_model.pkl")
+
+from pathlib import Path
+
+MODEL_PATH = Path(__file__).parent / "final_uber_ensemble_model.pkl"
+model = joblib.load(MODEL_PATH)
+
 
 # App setup
 app = Flask(__name__)
