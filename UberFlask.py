@@ -1,51 +1,36 @@
 from flask import Flask, request, jsonify
-import numpy as np
-from flask_cors import CORS
-import datetime
-from CustomModel import WeightedEnsembleRegressor
 import joblib
+import numpy as np
 
-
-# Load the model
-
-from pathlib import Path
-
-MODEL_PATH = Path(__file__).parent / "final_uber_ensemble_model.pkl"
+# ✅ Load the compressed model
+MODEL_PATH = "final_uber_ensemble_model_compressed.pkl"
 model = joblib.load(MODEL_PATH)
 
-
-# App setup
 app = Flask(__name__)
-CORS(app)
 
-# Configuration
-WINDOW_SIZE = 24
+@app.route('/')
+def home():
+    return "Uber Trip Prediction API (Compressed Model)"
 
-@app.route("/predict", methods=["POST"])
+@app.route('/predict', methods=['POST'])
 def predict():
     try:
-        data = request.get_json()
+        data = request.get_json(force=True)
+        lag_values = data['lag_values']
 
-        # Expecting a list of 24 lag values
-        lag_values = data.get("lag_values")
+        if len(lag_values) != 24:
+            return jsonify({"error": "Exactly 24 lag values are required."}), 400
 
-        if not lag_values or len(lag_values) != WINDOW_SIZE:
-            return jsonify({"error": f"Please provide exactly {WINDOW_SIZE} lagged values."}), 400
-
-        # Convert to numpy and reshape
-        features = np.array(lag_values).reshape(1, -1)
+        features = np.array([lag_values])
         prediction = model.predict(features)[0]
 
         return jsonify({
-            "predicted_trip_count": round(prediction, 2)
+            "input_lags": lag_values,
+            "predicted_trips": int(round(prediction))
         })
-
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": str(e)}), 400
 
-@app.route("/health", methods=["GET"])
-def health():
-    return jsonify({"status": "Working", "model": "Uber Trip Count Ensemble Model"})
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     app.run(debug=True)
