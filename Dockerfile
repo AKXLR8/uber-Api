@@ -11,7 +11,8 @@ COPY . /app
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Expose the port Flask runs on
-EXPOSE 8080
+EXPOSE 5000
 
 # Run the Flask app
 CMD ["python", "UberFlask.py"]
+
